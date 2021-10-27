@@ -18,11 +18,12 @@ dependencies {
     // Библиотека для работы с матрицами
     implementation("org.ejml:ejml-all:0.41")
 
+    implementation("org.junit.jupiter:junit-jupiter:5.7.0")
     testImplementation(kotlin("test"))
 }
 
 tasks.test {
-    useJUnit()
+    useJUnitPlatform()
 }
 
 tasks.withType<KotlinCompile>() {
