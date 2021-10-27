@@ -13,7 +13,11 @@ repositories {
 }
 
 dependencies {
+    // Парсер командной строки
     implementation("info.picocli:picocli:4.6.1")
+    // Библиотека для работы с матрицами
+    implementation("org.ejml:ejml-all:0.41")
+
     testImplementation(kotlin("test"))
 }
 
