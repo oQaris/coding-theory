@@ -1,3 +1,5 @@
+package hamming
+
 fun encode(bin: String, m: Int = 3): String {
     val n = (2 shl m - 1) - 1 // 2^m - 1
     val k = n - m

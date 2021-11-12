@@ -1,11 +1,15 @@
+import hamming.decode
+import hamming.encode
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
+import reedsolomon.*
+import kotlin.random.Random
 
 @Command(
     name = "coder",
     version = ["CD 0.0.1"],
-    subcommands = [Hamming::class, Noise::class],
+    subcommands = [Hamming::class, Noise::class, ReedSolomon::class],
     description = ["A lightweight CLI-utility that can encode messages to protect data from interference."],
     mixinStandardHelpOptions = true
 )
@@ -136,5 +140,77 @@ class DecodeHamming : HammingBase(), Runnable {
             sb.append(s.toInt(2).toChar())
         }
         print(sb.toString())
+    }
+}
+
+
+@Command(
+    name = "rs",
+    subcommands = [ReedSolomonBase::class],
+    description = ["Encodes and decodes messages using finite fields (Reed-Solomon code)."]
+)
+class ReedSolomon
+
+@Command(
+    name = "test",
+    description = ["Encodes the message, adds the required number of errors, and decodes the message. " +
+            "All stages are displayed on console."]
+)
+open class ReedSolomonBase : Runnable {
+    @Option(
+        names = ["-p"],
+        description = ["The specified prime number for the field GF(p), default = 11"]
+    )
+    var p: Int = 11
+
+    @Option(
+        names = ["-t"],
+        description = ["The number of mistakes to be corrected, default = 3"]
+    )
+    var t: Int = 3
+
+    @Option(
+        required = true,
+        names = ["-m", "--message"],
+        description = ["Text message to encode/decode."]
+    )
+    lateinit var message: String
+
+    override fun run() {
+        GF.q = p
+        println("The table of syndromes is being filled in, please wait...")
+        val rsc = ReedSolomonCode(GF.q - 1, t)
+
+        println("H")
+        printGFMatrix(rsc.h)
+
+        println("G")
+        printGFMatrix(rsc.g)
+
+        val fourWords = messageToFourWords(message)
+        val encoded = fourWords.map { rsc.encode(it) }
+        val noised = encoded.map { word ->
+            val noisedWord = word.clone()
+            for (i in 1..t)
+                noisedWord[(0 until rsc.n).random()] = GF(Random.nextInt())
+            noisedWord
+        }
+        val decoded = noised.map { rsc.decode(it) }
+        val decodedMessage = fourWordsToMessage(decoded)
+
+        println("4-words")
+        printWordList(fourWords)
+
+        println("Encoded words")
+        printWordList(encoded)
+
+        println("Noised words")
+        printWordList(noised)
+
+        println("Decoded words")
+        printWordList(decoded)
+
+        println("Decoded message")
+        println(decodedMessage)
     }
 }
